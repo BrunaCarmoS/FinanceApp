@@ -1,12 +1,9 @@
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 enum TransactionType {
@@ -14,27 +11,11 @@ enum TransactionType {
   EXPENSE
 }
 
-model Profile {
-  id        String   @id @db.Uuid // mesmo id do auth.users
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-
-  accounts    Account[]
-  categories  Category[]
-  transactions Transaction[]
-
-  @@map("profiles")
-}
-
 model Account {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String
   balance   Decimal  @default(0) @db.Decimal(12, 2)
   createdAt DateTime @default(now())
-
-  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  profileId String   @db.Uuid
 
   transactions Transaction[]
 
@@ -42,12 +23,9 @@ model Account {
 }
 
 model Category {
-  id    String @id @default(uuid()) @db.Uuid
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name  String
   color String?
-
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  profileId String  @db.Uuid
 
   transactions Transaction[]
 
@@ -55,15 +33,12 @@ model Category {
 }
 
 model Transaction {
-  id          String           @id @default(uuid()) @db.Uuid
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   amount      Decimal          @db.Decimal(12, 2)
   type        TransactionType
   description String?
   date        DateTime         @default(now())
   createdAt   DateTime         @default(now())
-
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  profileId String  @db.Uuid
 
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
   accountId String  @db.Uuid
