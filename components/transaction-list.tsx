@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
 type Transaction = {
   id: string;
@@ -21,6 +22,8 @@ type Transaction = {
 };
 
 export function TransactionList() {
+  const queryClient = useQueryClient();
+
   const { data: transactions, isLoading } = useQuery({
     queryKey: ["transactions"],
     queryFn: async (): Promise<Transaction[]> => {
@@ -28,6 +31,29 @@ export function TransactionList() {
       return response.json();
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/transactions/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao excluir transação");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    },
+  });
+
+  function handleDelete(id: string) {
+    if (confirm("Tem certeza que quer excluir essa transação?")) {
+      deleteMutation.mutate(id);
+    }
+  }
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
@@ -51,6 +77,7 @@ export function TransactionList() {
           <TableHead>Conta</TableHead>
           <TableHead>Categoria</TableHead>
           <TableHead className="text-right">Valor</TableHead>
+          <TableHead className="text-right">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -75,6 +102,16 @@ export function TransactionList() {
             <TableCell>{transaction.category?.name || "—"}</TableCell>
             <TableCell className="text-right">
               R$ {Number(transaction.amount).toFixed(2)}
+            </TableCell>
+            <TableCell className="text-right">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDelete(transaction.id)}
+                disabled={deleteMutation.isPending}
+              >
+                Excluir
+              </Button>
             </TableCell>
           </TableRow>
         ))}

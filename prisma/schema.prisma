@@ -27,7 +27,8 @@ model Category {
   name  String
   color String?
 
-  transactions Transaction[]
+  transactions Transaction[] 
+  budgets Budget[]
 
   @@map("categories")
 }
@@ -47,4 +48,17 @@ model Transaction {
   categoryId String?   @db.Uuid
 
   @@map("transactions")
+}
+
+model Budget {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  amount    Decimal  @db.Decimal(12, 2)
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime @default(now())
+
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String   @db.Uuid
+
+  @@map("budgets")
 }

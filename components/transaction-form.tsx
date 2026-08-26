@@ -24,6 +24,12 @@ type Account = {
   name: string;
 };
 
+type Category = {
+  id: string;
+  name: string;
+  color: string | null;
+};
+
 export function TransactionForm() {
   const queryClient = useQueryClient();
 
@@ -31,6 +37,14 @@ export function TransactionForm() {
     queryKey: ["accounts"],
     queryFn: async (): Promise<Account[]> => {
       const response = await fetch("/api/accounts");
+      return response.json();
+    },
+  });
+
+  const { data: categories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async (): Promise<Category[]> => {
+      const response = await fetch("/api/categories");
       return response.json();
     },
   });
@@ -127,6 +141,37 @@ export function TransactionForm() {
         />
         {errors.accountId && (
           <p className="text-sm text-red-500">{errors.accountId.message}</p>
+        )}
+      </div>
+
+      <div>
+        <Label htmlFor="categoryId">Categoria</Label>
+        <Controller
+          name="categoryId"
+          control={control}
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} value={field.value ?? ""}>
+              <SelectTrigger id="categoryId">
+                <SelectValue placeholder="Selecione uma categoria (opcional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories?.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="inline-block h-3 w-3 rounded-full"
+                        style={{ backgroundColor: category.color ?? "#CCCCCC" }}
+                      />
+                      {category.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.categoryId && (
+          <p className="text-sm text-red-500">{errors.categoryId.message}</p>
         )}
       </div>
 
