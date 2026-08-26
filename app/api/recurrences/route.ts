@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createTransactionSchema } from "@/lib/validations/transaction";
+import { createRecurrenceSchema } from "@/lib/validations/recurrence";
 import { generateDueTransactions } from "@/lib/recurrence-engine";
 
 export async function GET() {
   await generateDueTransactions();
 
-  const transactions = await prisma.transaction.findMany({
-    orderBy: { date: "desc" },
-    include: { account: true, category: true, goal: true },
+  const recurrences = await prisma.recurrence.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { account: true, category: true },
   });
 
-  return NextResponse.json(transactions);
+  return NextResponse.json(recurrences);
 }
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const result = createTransactionSchema.safeParse(body);
+  const result = createRecurrenceSchema.safeParse(body);
 
   if (!result.success) {
     return NextResponse.json(
@@ -25,9 +25,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const transaction = await prisma.transaction.create({
+  const recurrence = await prisma.recurrence.create({
     data: result.data,
   });
 
-  return NextResponse.json(transaction, { status: 201 });
+  return NextResponse.json(recurrence, { status: 201 });
 }

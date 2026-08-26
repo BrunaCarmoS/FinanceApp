@@ -25,8 +25,9 @@ type Category = {
   color: string | null;
 };
 
-// Cada preset guarda quantos dias/meses/anos somar a partir de hoje
-const PRESETS = [
+type Preset = { label: string; days?: number; months?: number; years?: number };
+
+const PRESETS: Preset[] = [
   { label: "7 dias", days: 7 },
   { label: "15 dias", days: 15 },
   { label: "1 mês", months: 1 },
@@ -35,17 +36,16 @@ const PRESETS = [
 ];
 
 function formatDateInput(date: Date) {
-  // Converte pro formato yyyy-mm-dd que o <input type="date"> espera
   return date.toISOString().split("T")[0];
 }
 
-function calculateEndDate(preset: (typeof PRESETS)[number]) {
+function calculateEndDate(preset: Preset) {
   const start = new Date();
   const end = new Date(start);
 
-  if ("days" in preset) end.setDate(end.getDate() + preset.days);
-  if ("months" in preset) end.setMonth(end.getMonth() + preset.months);
-  if ("years" in preset) end.setFullYear(end.getFullYear() + preset.years);
+  if (preset.days !== undefined) end.setDate(end.getDate() + preset.days);
+  if (preset.months !== undefined) end.setMonth(end.getMonth() + preset.months);
+  if (preset.years !== undefined) end.setFullYear(end.getFullYear() + preset.years);
 
   return { start, end };
 }
@@ -68,7 +68,7 @@ export function BudgetForm() {
     control,
     setValue,
     formState: { errors },
-  } = useForm<CreateBudgetInput>({
+  } = useForm<CreateBudgetInput, unknown, CreateBudgetOutput>({
     resolver: zodResolver(createBudgetSchema),
   });
 
@@ -96,8 +96,10 @@ export function BudgetForm() {
     mutation.mutate(data);
   }
 
-  function handlePresetChange(label: string) {
-    const preset = PRESETS.find((p) => p.label === label);
+  function handlePresetChange(value: string | null) {
+    if (!value) return;
+
+    const preset = PRESETS.find((p) => p.label === value);
     if (!preset) return;
 
     const { start, end } = calculateEndDate(preset);

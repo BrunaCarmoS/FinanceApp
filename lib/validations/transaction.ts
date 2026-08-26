@@ -7,6 +7,7 @@ export const createTransactionSchema = z.object({
   date: z.coerce.date().optional(),
   accountId: z.string().uuid("Conta inválida"),
   categoryId: z.string().uuid("Categoria inválida").optional(),
+  goalId: z.string().uuid("Meta inválida").optional(),
 });
 
 export type CreateTransactionInput = z.input<typeof createTransactionSchema>;

@@ -1,127 +1,129 @@
 # Controle Financeiro
 
-Sistema de gestão financeira pessoal desenvolvido como projeto de portfólio, com foco em boas práticas de engenharia de software: tipagem estática, validação em runtime, testes automatizados e arquitetura modular.
+**[🇧🇷 Português](./README.pt-BR.md)** | 🇺🇸 English
 
-## Sobre o projeto
+Personal finance management system built as a portfolio project, focused on software engineering best practices: static typing, runtime validation, automated testing, and modular architecture.
 
-Aplicação para controle de finanças pessoais permitindo o registro de receitas e despesas, organização por categorias e contas, definição de orçamentos e metas, e visualização de relatórios financeiros através de gráficos.
+## About the project
 
-O sistema é **single-tenant** (uso pessoal, sem multiusuário) — decisão intencional para manter o escopo focado nas funcionalidades de domínio financeiro, sem a complexidade adicional de isolamento de dados entre usuários (Row Level Security, multi-tenancy), que não agregaria valor real para o caso de uso proposto.
+An application for managing personal finances, allowing income and expense tracking, organization by categories and accounts, budget and goal definitions, and financial report visualization through charts.
 
-## Funcionalidades
+The system is **single-tenant** (personal use, no multi-user support) — an intentional decision to keep the scope focused on financial domain functionality, without the added complexity of user data isolation (Row Level Security, multi-tenancy), which wouldn't add real value for the proposed use case.
 
-- **Transações** — cadastro, edição, exclusão e filtro de receitas e despesas
-- **Contas** — controle de saldo por conta (ex: carteira, banco, cartão)
-- **Categorias** — organização das transações por tipo de gasto/receita
-- **Orçamentos** — definição de limites de gasto por categoria
-- **Metas** — acompanhamento de objetivos financeiros
-- **Recorrências** — automação de transações que se repetem (assinaturas, salário)
-- **Relatórios** — visualização gráfica de receitas, despesas e evolução de saldo
+## Features
 
-## Tecnologias
+- **Transactions** — create, delete, and filter income and expenses; can be linked to a category and/or a goal
+- **Accounts** — track balance per account (e.g. wallet, bank, card)
+- **Categories** — organize transactions by spending/income type, with custom color picker (preset palette + native color wheel + hex input)
+- **Budgets** — set spending limits per category, with custom date ranges (including quick presets: 7 days, 15 days, 1 month, 5 months, 1 year) and a real-time progress bar comparing actual spend to the limit
+- **Goals** — track financial objectives; progress is calculated from actual expense transactions linked to the goal, not a manually-entered value
+- **Recurrences** — automate transactions that repeat (subscriptions, salary, etc.), generated on demand whenever the Transactions or Recurrences screens are loaded, based on frequency (daily/weekly/monthly/yearly) and an optional end date
+- **Dashboard** — summary view of total income, total expenses, and overall balance across all accounts
 
-| Camada | Tecnologia |
+## Tech stack
+
+| Layer | Technology |
 |---|---|
-| Linguagem | TypeScript |
+| Language | TypeScript |
 | Framework | Next.js (App Router) |
 | UI | React, Tailwind CSS, shadcn/ui |
-| Formulários e validação | React Hook Form + Zod |
-| Estado do servidor | TanStack Query |
-| Gráficos | Recharts |
+| Forms & validation | React Hook Form + Zod |
+| Server state | TanStack Query |
+| Charts | Recharts |
 | ORM | Prisma |
-| Banco de dados | PostgreSQL (Supabase) |
-| Testes unitários | Vitest |
-| Testes E2E | Playwright |
+| Database | PostgreSQL (local for development, Supabase-ready for production) |
+| Unit testing | Vitest |
+| E2E testing | Playwright |
 | CI/CD | GitHub Actions |
 
-## Decisões técnicas
+## Technical decisions
 
-- **Sem autenticação/multiusuário**: o sistema foi projetado para uso pessoal único. Isolamento de dados por usuário (RLS, tabela de perfil vinculada a `auth.users`) foi deliberadamente deixado de fora do escopo por não refletir o caso de uso real.
-- **Prisma + Supabase**: Prisma cuida do acesso tipado e das migrations do schema; Supabase fornece a infraestrutura de Postgres gerenciado.
-- **Zod em runtime**: tipagem do TypeScript garante segurança em tempo de compilação, mas dados vindos de formulários/API são validados novamente em runtime com Zod.
-- **REST em vez de GraphQL**: API convencional via Route Handlers do Next.js, suficiente para o escopo do projeto e mais direta de demonstrar/documentar.
+- **No authentication/multi-user support**: the system was designed for single personal use. User-level data isolation (RLS, a profile table tied to `auth.users`) was deliberately left out of scope, since it doesn't reflect the actual use case.
+- **Prisma + PostgreSQL**: Prisma handles typed data access and schema migrations. The project runs against a local PostgreSQL instance in development, with Supabase's managed Postgres as the production target.
+- **Runtime validation with Zod**: TypeScript guarantees compile-time safety, but data coming from forms/API requests is validated again at runtime with Zod.
+- **REST over GraphQL**: a conventional API via Next.js Route Handlers, sufficient for the project's scope and more straightforward to demonstrate/document.
+- **On-demand recurrence generation**: instead of a background job/cron process, recurring transactions are generated when the Transactions or Recurrences screens load. Simpler to run for a single-user local project, with no extra infrastructure required.
+- **Computed progress over stored values**: both Budget "spent" and Goal "current amount" are calculated by aggregating linked Transaction records at read time, rather than storing and manually updating a running total — keeping a single source of truth and avoiding drift.
 
-## Como rodar localmente
+## Running locally
 
-### Pré-requisitos
+### Prerequisites
 
 - Node.js 18+
-- Uma conta no [Supabase](https://supabase.com)
+- PostgreSQL running locally (via [pgAdmin](https://www.pgadmin.org/), the `postgresql` service, or any local install)
 
-### 1. Clonar o repositório
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/seu-usuario/controle-financeiro.git
+git clone https://github.com/your-username/controle-financeiro.git
 cd controle-financeiro
 ```
 
-### 2. Instalar dependências
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Criar um projeto no Supabase
+### 3. Create the local database
 
-Em [app.supabase.com](https://app.supabase.com), crie um novo projeto e aguarde o banco provisionar (leva cerca de 2 minutos). Anote a senha do banco definida na criação — ela será usada nas connection strings.
+Using pgAdmin (or `psql`), create a database, e.g.:
 
-### 4. Obter as credenciais de conexão
+```sql
+CREATE DATABASE controle_financeiro;
+```
 
-Dentro do projeto criado, clique no botão **Connect** (topo do dashboard) e selecione a aba **ORM**. Copie as duas connection strings exibidas (uma para pooler de transação, outra para conexão direta/migrations).
-
-Para as chaves de API, vá em **Project Settings → API Keys** e copie a **Project URL** e a chave **Publishable** (em projetos mais antigos, pode aparecer como `anon` `public` na aba "Legacy API Keys" — funciona da mesma forma).
-
-### 5. Configurar variáveis de ambiente
+### 4. Configure environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Preencha o `.env` com os valores obtidos no passo anterior:
+Fill in `.env` with your local connection:
 
 ```env
-DATABASE_URL="postgresql://postgres.[project-ref]:[sua-senha]@aws-0-[região].pooler.supabase.com:6543/postgres?pgbouncer=true"
-DIRECT_URL="postgresql://postgres.[project-ref]:[sua-senha]@aws-0-[região].pooler.supabase.com:5432/postgres"
-NEXT_PUBLIC_SUPABASE_URL="https://[project-ref].supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_..."
+DATABASE_URL="postgresql://postgres:your-password@localhost:5432/controle_financeiro"
+DIRECT_URL="postgresql://postgres:your-password@localhost:5432/controle_financeiro"
 ```
 
-> Se a senha do banco contiver caracteres especiais (`@`, `#`, `%`, `/`, espaço), ela precisa estar URL-encoded na connection string, ou a conexão falha.
+> If your password contains special characters (`@`, `#`, `%`, `/`, spaces), it must be URL-encoded in the connection string, or the connection will fail.
 
-### 6. Rodar as migrations
+### 5. Run migrations
 
 ```bash
 npx prisma migrate dev
+npx prisma generate
 ```
 
-> **Nota de troubleshooting**: em algumas redes, o Node.js prioriza resolução DNS via IPv6, o que pode causar erro `P1001: Can't reach database server` mesmo com as credenciais corretas (um teste rápido com `psql` usando a mesma string geralmente conecta normalmente, confirmando que o problema é específico do Node). Se isso acontecer, rode:
+> **Troubleshooting note**: on some networks, Node.js prioritizes IPv6 DNS resolution, which can cause a `P1001: Can't reach database server` error even with correct credentials. If this happens, run:
 > ```bash
 > NODE_OPTIONS="--dns-result-order=ipv4first" npx prisma migrate dev
 > ```
-> Para tornar a correção permanente, adicione no topo do `prisma.config.ts`:
+> To make the fix permanent, add this to the top of `prisma.config.ts`:
 > ```typescript
 > import dns from "node:dns";
 > dns.setDefaultResultOrder("ipv4first");
 > ```
 
-### 7. Subir o servidor de desenvolvimento
+### 6. Start the development server
 
 ```bash
 npm run dev
 ```
 
-A aplicação estará disponível em `http://localhost:3000`.
+The app will be available at `http://localhost:3000`.
 
-### Rodando os testes
+### Running tests
 
 ```bash
-npm run test        # testes unitários (Vitest)
-npm run test:e2e     # testes end-to-end (Playwright)
+npm run test        # unit tests (Vitest)
+npm run test:e2e     # end-to-end tests (Playwright)
 ```
 
-## Licença
+## Deploying with Supabase
 
-Projeto desenvolvido para fins de estudo e portfólio.
+For production, the project is designed to run against [Supabase](https://supabase.com)'s managed PostgreSQL. In the Supabase dashboard, use the **Connect** button (top of the project page) → **ORM** tab to get the pooled (`DATABASE_URL`) and direct (`DIRECT_URL`) connection strings, and set them as environment variables on your deployment platform.
 
+## License
 
-traduzir pra ingles tbm.
+Built for study and portfolio purposes.

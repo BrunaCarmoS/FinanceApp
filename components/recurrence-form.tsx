@@ -4,10 +4,10 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  createTransactionSchema,
-  CreateTransactionInput,
-  CreateTransactionOutput,
-} from "@/lib/validations/transaction";
+  createRecurrenceSchema,
+  CreateRecurrenceInput,
+  CreateRecurrenceOutput,
+} from "@/lib/validations/recurrence";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,23 +19,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type Account = {
-  id: string;
-  name: string;
-};
+type Account = { id: string; name: string };
+type Category = { id: string; name: string; color: string | null };
 
-type Category = {
-  id: string;
-  name: string;
-  color: string | null;
-};
-
-type Goal = {
-  id: string;
-  name: string;
-};
-
-export function TransactionForm() {
+export function RecurrenceForm() {
   const queryClient = useQueryClient();
 
   const { data: accounts } = useQuery({
@@ -54,51 +41,47 @@ export function TransactionForm() {
     },
   });
 
-  const { data: goals } = useQuery({
-    queryKey: ["goals"],
-    queryFn: async (): Promise<Goal[]> => {
-      const response = await fetch("/api/goals");
-      return response.json();
-    },
-  });
-
   const {
     register,
     handleSubmit,
     reset,
     control,
     formState: { errors },
-  } = useForm<CreateTransactionInput, unknown, CreateTransactionOutput>({
-    resolver: zodResolver(createTransactionSchema),
+  } = useForm<CreateRecurrenceInput, unknown, CreateRecurrenceOutput>({
+    resolver: zodResolver(createRecurrenceSchema),
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: CreateTransactionOutput) => {
-      const response = await fetch("/api/transactions", {
+    mutationFn: async (data: CreateRecurrenceOutput) => {
+      const response = await fetch("/api/recurrences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao criar transação");
+        throw new Error("Erro ao criar recorrência");
       }
 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["goals"] });
+      queryClient.invalidateQueries({ queryKey: ["recurrences"] });
       reset();
     },
   });
 
-  function onSubmit(data: CreateTransactionOutput) {
+  function onSubmit(data: CreateRecurrenceOutput) {
     mutation.mutate(data);
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <Label htmlFor="description">Descrição</Label>
+        <Input id="description" placeholder="Ex: Netflix, Salário..." {...register("description")} />
+      </div>
+
       <div>
         <Label htmlFor="amount">Valor</Label>
         <Input
@@ -110,11 +93,6 @@ export function TransactionForm() {
         {errors.amount && (
           <p className="text-sm text-red-500">{errors.amount.message}</p>
         )}
-      </div>
-
-      <div>
-        <Label htmlFor="description">Descrição</Label>
-        <Input id="description" {...register("description")} />
       </div>
 
       <div>
@@ -131,6 +109,38 @@ export function TransactionForm() {
         {errors.type && (
           <p className="text-sm text-red-500">{errors.type.message}</p>
         )}
+      </div>
+
+      <div>
+        <Label htmlFor="frequency">Frequência</Label>
+        <select
+          id="frequency"
+          {...register("frequency")}
+          className="w-full border rounded-md h-9 px-3 bg-background"
+        >
+          <option value="">Selecione...</option>
+          <option value="DAILY">Diária</option>
+          <option value="WEEKLY">Semanal</option>
+          <option value="MONTHLY">Mensal</option>
+          <option value="YEARLY">Anual</option>
+        </select>
+        {errors.frequency && (
+          <p className="text-sm text-red-500">{errors.frequency.message}</p>
+        )}
+      </div>
+
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <Label htmlFor="startDate">Início</Label>
+          <Input id="startDate" type="date" {...register("startDate")} />
+          {errors.startDate && (
+            <p className="text-sm text-red-500">{errors.startDate.message}</p>
+          )}
+        </div>
+        <div className="flex-1">
+          <Label htmlFor="endDate">Fim (opcional)</Label>
+          <Input id="endDate" type="date" {...register("endDate")} />
+        </div>
       </div>
 
       <div>
@@ -159,66 +169,29 @@ export function TransactionForm() {
       </div>
 
       <div>
-        <Label htmlFor="categoryId">Categoria</Label>
+        <Label htmlFor="categoryId">Categoria (opcional)</Label>
         <Controller
           name="categoryId"
           control={control}
           render={({ field }) => (
             <Select onValueChange={field.onChange} value={field.value ?? ""}>
               <SelectTrigger id="categoryId">
-                <SelectValue placeholder="Selecione uma categoria (opcional)" />
+                <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
               <SelectContent>
                 {categories?.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
-                    <span className="flex items-center gap-2">
-                      <span
-                        className="inline-block h-3 w-3 rounded-full"
-                        style={{ backgroundColor: category.color ?? "#CCCCCC" }}
-                      />
-                      {category.name}
-                    </span>
+                    {category.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           )}
         />
-        {errors.categoryId && (
-          <p className="text-sm text-red-500">{errors.categoryId.message}</p>
-        )}
-      </div>
-
-      <div>
-        <Label htmlFor="goalId">Doar para uma meta</Label>
-        <Controller
-          name="goalId"
-          control={control}
-          render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value ?? ""}>
-              <SelectTrigger id="goalId">
-                <SelectValue placeholder="Nenhuma (opcional)" />
-              </SelectTrigger>
-              <SelectContent>
-                {goals?.map((goal) => (
-                  <SelectItem key={goal.id} value={goal.id}>
-                    {goal.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        <p className="text-xs text-muted-foreground mt-1">
-          Marque como despesa e escolha uma meta para registrar essa transação como uma contribuição.
-        </p>
-        {errors.goalId && (
-          <p className="text-sm text-red-500">{errors.goalId.message}</p>
-        )}
       </div>
 
       <Button type="submit" disabled={mutation.isPending}>
-        {mutation.isPending ? "Salvando..." : "Salvar transação"}
+        {mutation.isPending ? "Salvando..." : "Criar recorrência"}
       </Button>
     </form>
   );
