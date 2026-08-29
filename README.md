@@ -55,7 +55,7 @@ The system is **single-tenant** (personal use, no multi-user support) — an int
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/controle-financeiro.git
+git clone https://github.com/BrunaCarmoS/FinanceApp.git
 cd controle-financeiro
 ```
 
