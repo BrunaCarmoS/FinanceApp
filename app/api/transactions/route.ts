@@ -25,8 +25,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const transaction = await prisma.transaction.create({
-    data: result.data,
+  const transaction = await prisma.$transaction(async (tx) => {
+    const created = await tx.transaction.create({ data: result.data });
+
+    const delta = result.data.type === "INCOME" ? result.data.amount : -result.data.amount;
+
+    await tx.account.update({
+      where: { id: result.data.accountId },
+      data: { balance: { increment: delta } },
+    });
+
+    return created;
   });
 
   return NextResponse.json(transaction, { status: 201 });

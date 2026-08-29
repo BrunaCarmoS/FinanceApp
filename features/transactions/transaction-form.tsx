@@ -19,24 +19,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type Account = {
+type Account = { id: string; name: string };
+type Category = { id: string; name: string; color: string | null };
+type Goal = { id: string; name: string };
+
+type TransactionData = {
   id: string;
-  name: string;
+  amount: string;
+  type: "INCOME" | "EXPENSE";
+  description: string | null;
+  date: string;
+  accountId: string;
+  categoryId: string | null;
+  goalId: string | null;
 };
 
-type Category = {
-  id: string;
-  name: string;
-  color: string | null;
-};
-
-type Goal = {
-  id: string;
-  name: string;
-};
-
-export function TransactionForm() {
+export function TransactionForm({
+  transaction,
+  onSuccess,
+}: {
+  transaction?: TransactionData;
+  onSuccess?: () => void;
+} = {}) {
   const queryClient = useQueryClient();
+  const isEditing = !!transaction;
 
   const { data: accounts } = useQuery({
     queryKey: ["accounts"],
@@ -70,26 +76,42 @@ export function TransactionForm() {
     formState: { errors },
   } = useForm<CreateTransactionInput, unknown, CreateTransactionOutput>({
     resolver: zodResolver(createTransactionSchema),
+    defaultValues: transaction
+      ? {
+          amount: Number(transaction.amount),
+          type: transaction.type,
+          description: transaction.description ?? "",
+          date: transaction.date.split("T")[0] as never,
+          accountId: transaction.accountId,
+          categoryId: transaction.categoryId ?? undefined,
+          goalId: transaction.goalId ?? undefined,
+        }
+      : undefined,
   });
 
   const mutation = useMutation({
     mutationFn: async (data: CreateTransactionOutput) => {
-      const response = await fetch("/api/transactions", {
-        method: "POST",
+      const url = isEditing ? `/api/transactions/${transaction.id}` : "/api/transactions";
+      const method = isEditing ? "PATCH" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao criar transação");
+        throw new Error(isEditing ? "Erro ao editar transação" : "Erro ao criar transação");
       }
 
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       reset();
+      onSuccess?.();
     },
   });
 
@@ -119,15 +141,21 @@ export function TransactionForm() {
 
       <div>
         <Label htmlFor="type">Tipo</Label>
-        <select
-          id="type"
-          {...register("type")}
-          className="w-full border rounded-md h-9 px-3 bg-background"
-        >
-          <option value="">Selecione...</option>
-          <option value="INCOME">Receita</option>
-          <option value="EXPENSE">Despesa</option>
-        </select>
+        <Controller
+          name="type"
+          control={control}
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} value={field.value ?? ""}>
+              <SelectTrigger id="type">
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="INCOME">Receita</SelectItem>
+                <SelectItem value="EXPENSE">Despesa</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
         {errors.type && (
           <p className="text-sm text-red-500">{errors.type.message}</p>
         )}
@@ -184,9 +212,6 @@ export function TransactionForm() {
             </Select>
           )}
         />
-        {errors.categoryId && (
-          <p className="text-sm text-red-500">{errors.categoryId.message}</p>
-        )}
       </div>
 
       <div>
@@ -209,16 +234,10 @@ export function TransactionForm() {
             </Select>
           )}
         />
-        <p className="text-xs text-muted-foreground mt-1">
-          Marque como despesa e escolha uma meta para registrar essa transação como uma contribuição.
-        </p>
-        {errors.goalId && (
-          <p className="text-sm text-red-500">{errors.goalId.message}</p>
-        )}
       </div>
 
       <Button type="submit" disabled={mutation.isPending}>
-        {mutation.isPending ? "Salvando..." : "Salvar transação"}
+        {mutation.isPending ? "Salvando..." : isEditing ? "Salvar alterações" : "Salvar transação"}
       </Button>
     </form>
   );

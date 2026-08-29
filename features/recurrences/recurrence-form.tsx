@@ -22,7 +22,7 @@ import {
 type Account = { id: string; name: string };
 type Category = { id: string; name: string; color: string | null };
 
-export function RecurrenceForm() {
+export function RecurrenceForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
 
   const { data: accounts } = useQuery({
@@ -68,6 +68,7 @@ export function RecurrenceForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["recurrences"] });
       reset();
+      onSuccess?.();
     },
   });
 

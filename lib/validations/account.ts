@@ -7,7 +7,6 @@ export const createAccountSchema = z.object({
 
 export const updateAccountSchema = createAccountSchema.partial();
 
-export type CreateAccountInput = z.infer<typeof createAccountSchema>;
+export type CreateAccountInput = z.input<typeof createAccountSchema>;
+export type CreateAccountOutput = z.output<typeof createAccountSchema>;
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
-export type CreateAccountOutput = z.infer<typeof createAccountSchema>;
-export type UpdateAccountOutput = z.infer<typeof updateAccountSchema>;

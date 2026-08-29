@@ -10,11 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ColorPicker } from "@/components/color-picker";
+import { ColorPicker } from "./color-picker";
 
 const DEFAULT_COLOR = "#16A34A";
 
-export function CategoryForm() {
+export function CategoryForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
 
   const {
@@ -45,6 +45,7 @@ export function CategoryForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       reset({ color: DEFAULT_COLOR });
+      onSuccess?.();
     },
   });
 

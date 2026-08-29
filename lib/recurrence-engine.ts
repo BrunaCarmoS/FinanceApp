@@ -40,20 +40,29 @@ export async function generateDueTransactions() {
 
     let lastCreated: Date | null = null;
 
-    while (
+        while (
       nextDate <= today &&
       (!recurrence.endDate || nextDate <= recurrence.endDate)
     ) {
-      await prisma.transaction.create({
-        data: {
-          amount: recurrence.amount,
-          type: recurrence.type,
-          description: recurrence.description ?? undefined,
-          date: nextDate,
-          accountId: recurrence.accountId,
-          categoryId: recurrence.categoryId ?? undefined,
-          recurrenceId: recurrence.id,
-        },
+      await prisma.$transaction(async (tx) => {
+        await tx.transaction.create({
+          data: {
+            amount: recurrence.amount,
+            type: recurrence.type,
+            description: recurrence.description ?? undefined,
+            date: nextDate,
+            accountId: recurrence.accountId,
+            categoryId: recurrence.categoryId ?? undefined,
+            recurrenceId: recurrence.id,
+          },
+        });
+
+        const delta = recurrence.type === "INCOME" ? Number(recurrence.amount) : -Number(recurrence.amount);
+
+        await tx.account.update({
+          where: { id: recurrence.accountId },
+          data: { balance: { increment: delta } },
+        });
       });
 
       lastCreated = nextDate;

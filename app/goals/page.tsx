@@ -1,20 +1,17 @@
-import { GoalForm } from "@/components/goal-form";
-import { GoalList } from "@/components/goal-list";
+import { GoalDialog } from "@/features/goals/goal-dialog";
+import { GoalList } from "@/features/goals/goal-list";
 
 export default function GoalsPage() {
   return (
-    <div className="p-8 space-y-8">
-      <h1 className="text-2xl font-bold">Metas</h1>
-
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Nova meta</h2>
-        <GoalForm />
+    <div className="p-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-900">Metas</h1>
+          <p className="text-sm text-zinc-500">Acompanhe seus objetivos financeiros</p>
+        </div>
+        <GoalDialog />
       </div>
-
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Suas metas</h2>
-        <GoalList />
-      </div>
+      <GoalList />
     </div>
   );
 }

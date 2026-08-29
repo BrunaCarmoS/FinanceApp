@@ -19,12 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type Category = {
-  id: string;
-  name: string;
-  color: string | null;
-};
-
+type Category = { id: string; name: string; color: string | null };
 type Preset = { label: string; days?: number; months?: number; years?: number };
 
 const PRESETS: Preset[] = [
@@ -50,7 +45,7 @@ function calculateEndDate(preset: Preset) {
   return { start, end };
 }
 
-export function BudgetForm() {
+export function BudgetForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
 
   const { data: categories } = useQuery({
@@ -89,6 +84,7 @@ export function BudgetForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["budgets"] });
       reset();
+      onSuccess?.();
     },
   });
 

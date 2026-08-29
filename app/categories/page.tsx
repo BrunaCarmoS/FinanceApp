@@ -1,20 +1,17 @@
-import { CategoryForm } from "@/components/category-form";
-import { CategoryList } from "@/components/category-list";
+import { CategoryDialog } from "@/features/categories/category-dialog";
+import { CategoryList } from "@/features/categories/category-list";
 
 export default function CategoriesPage() {
   return (
-    <div className="p-8 space-y-8">
-      <h1 className="text-2xl font-bold">Categorias</h1>
-
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Nova categoria</h2>
-        <CategoryForm />
+    <div className="p-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-900">Categorias</h1>
+          <p className="text-sm text-zinc-500">Organize por tipo de gasto/receita</p>
+        </div>
+        <CategoryDialog />
       </div>
-
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Suas categorias</h2>
-        <CategoryList />
-      </div>
+      <CategoryList />
     </div>
   );
 }

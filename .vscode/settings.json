@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "controle_financeiro",
+            "database": "controle_financeiro",
+            "username": "postgres"
+        }
+    ]
+}

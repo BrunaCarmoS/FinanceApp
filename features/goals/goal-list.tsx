@@ -45,7 +45,7 @@ function GoalCard({ goal }: { goal: Goal }) {
   }
 
   return (
-    <div className="border rounded-lg p-4 space-y-2">
+   <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5 space-y-2">
       <div className="flex items-center justify-between">
         <span className="font-medium">{goal.name}</span>
         <Button variant="destructive" size="sm" onClick={handleDelete}>

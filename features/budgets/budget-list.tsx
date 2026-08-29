@@ -67,7 +67,7 @@ export function BudgetList() {
         const isOverBudget = budget.spent > limit;
 
         return (
-          <div key={budget.id} className="border rounded-lg p-4 space-y-2">
+          <div key={budget.id} className="card-interactive bg-white rounded-2xl border border-zinc-100 shadow-sm p-5 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span

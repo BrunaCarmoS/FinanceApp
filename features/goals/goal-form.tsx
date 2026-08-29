@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function GoalForm() {
+export function GoalForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
 
   const {
@@ -41,6 +41,7 @@ export function GoalForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       reset();
+      onSuccess?.();
     },
   });
 

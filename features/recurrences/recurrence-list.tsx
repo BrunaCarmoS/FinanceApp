@@ -78,54 +78,57 @@ export function RecurrenceList() {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Descrição</TableHead>
-          <TableHead>Tipo</TableHead>
-          <TableHead>Frequência</TableHead>
-          <TableHead>Conta</TableHead>
-          <TableHead>Última geração</TableHead>
-          <TableHead className="text-right">Valor</TableHead>
-          <TableHead className="text-right">Ações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {recurrences.map((recurrence) => (
-          <TableRow key={recurrence.id}>
-            <TableCell>{recurrence.description || "—"}</TableCell>
-            <TableCell>
-              <span
-                className={
-                  recurrence.type === "INCOME" ? "text-green-600" : "text-red-600"
-                }
-              >
-                {recurrence.type === "INCOME" ? "Receita" : "Despesa"}
-              </span>
-            </TableCell>
-            <TableCell>{FREQUENCY_LABELS[recurrence.frequency]}</TableCell>
-            <TableCell>{recurrence.account.name}</TableCell>
-            <TableCell>
-              {recurrence.lastGeneratedDate
-                ? new Date(recurrence.lastGeneratedDate).toLocaleDateString("pt-BR")
-                : "Ainda não gerou"}
-            </TableCell>
-            <TableCell className="text-right">
-              R$ {Number(recurrence.amount).toFixed(2)}
-            </TableCell>
-            <TableCell className="text-right">
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleDelete(recurrence.id)}
-                disabled={deleteMutation.isPending}
-              >
-                Excluir
-              </Button>
-            </TableCell>
+    <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Descrição</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Frequência</TableHead>
+            <TableHead>Conta</TableHead>
+            <TableHead>Última geração</TableHead>
+            <TableHead className="text-right">Valor</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {recurrences.map((recurrence) => (
+            <TableRow key={recurrence.id}>
+              <TableCell>{recurrence.description || "—"}</TableCell>
+              <TableCell>
+                <span
+                  className={
+                    recurrence.type === "INCOME" ? "text-green-600" : "text-red-600"
+                  }
+                >
+                  {recurrence.type === "INCOME" ? "Receita" : "Despesa"}
+                </span>
+              </TableCell>
+              <TableCell>{FREQUENCY_LABELS[recurrence.frequency]}</TableCell>
+              <TableCell>{recurrence.account.name}</TableCell>
+              <TableCell>
+                {recurrence.lastGeneratedDate
+                  ? new Date(recurrence.lastGeneratedDate).toLocaleDateString("pt-BR")
+                  : "Ainda não gerou"}
+              </TableCell>
+              <TableCell className="text-right">
+                R$ {Number(recurrence.amount).toFixed(2)}
+              </TableCell>
+              <TableCell className="text-right">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDelete(recurrence.id)}
+                  disabled={deleteMutation.isPending}
+                >
+                  Excluir
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  
   );
 }

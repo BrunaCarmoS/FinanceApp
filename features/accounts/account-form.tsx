@@ -6,33 +6,49 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createAccountSchema,
   CreateAccountInput,
+  CreateAccountOutput,
 } from "@/lib/validations/account";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function AccountForm() {
+type Account = { id: string; name: string; balance: string };
+
+export function AccountForm({
+  account,
+  onSuccess,
+}: {
+  account?: Account;
+  onSuccess?: () => void;
+} = {}) {
   const queryClient = useQueryClient();
+  const isEditing = !!account;
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<CreateAccountInput>({
+  } = useForm<CreateAccountInput, unknown, CreateAccountOutput>({
     resolver: zodResolver(createAccountSchema),
+    defaultValues: account
+      ? { name: account.name, balance: Number(account.balance) }
+      : undefined,
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: CreateAccountInput) => {
-      const response = await fetch("/api/accounts", {
-        method: "POST",
+    mutationFn: async (data: CreateAccountOutput) => {
+      const url = isEditing ? `/api/accounts/${account.id}` : "/api/accounts";
+      const method = isEditing ? "PATCH" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao criar conta");
+        throw new Error(isEditing ? "Erro ao editar conta" : "Erro ao criar conta");
       }
 
       return response.json();
@@ -40,10 +56,11 @@ export function AccountForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
       reset();
+      onSuccess?.();
     },
   });
 
-  function onSubmit(data: CreateAccountInput) {
+  function onSubmit(data: CreateAccountOutput) {
     mutation.mutate(data);
   }
 
@@ -58,7 +75,7 @@ export function AccountForm() {
       </div>
 
       <div>
-        <Label htmlFor="balance">Saldo inicial</Label>
+        <Label htmlFor="balance">{isEditing ? "Saldo" : "Saldo inicial"}</Label>
         <Input
           id="balance"
           type="number"
@@ -71,7 +88,7 @@ export function AccountForm() {
       </div>
 
       <Button type="submit" disabled={mutation.isPending}>
-        {mutation.isPending ? "Salvando..." : "Criar conta"}
+        {mutation.isPending ? "Salvando..." : isEditing ? "Salvar alterações" : "Criar conta"}
       </Button>
     </form>
   );
